@@ -3,27 +3,12 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  
   body {
+    /* Default Light Mode */
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+  }
+  /* Dark Mode override */
+  .dark body {
     @apply bg-[#0a0a0a] text-gray-300;
-  }
-
-  /* Custom scrollbar for that clean Admin look */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #0a0a0a;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #262626;
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #333;
   }
 }

@@ -63,7 +63,10 @@ const Navbar = ({ profileImage, isCheckedIn, onToggleAttendance, onViewChange, c
             >
               <LayoutGrid size={20} />
             </button>
-            <AvatarDropdown profileImage={profileImage} />
+            <AvatarDropdown 
+                profileImage={profileImage} 
+                onViewChange={onViewChange} 
+                />
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class', // REQUIRED for the toggle to work
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,10 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Adding custom colors to match your dark-mode UI
-        background: "#0a0a0a",
-        card: "#121212",
-      },
+        // You can define custom colors here if needed
+      }
     },
   },
   plugins: [],
