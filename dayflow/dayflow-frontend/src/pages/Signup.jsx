@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const Register = () => {
+// Signup form for creating a new company account
+const Signup = () => {
   const [form, setForm] = useState({
     company: "",
     name: "",
@@ -137,4 +138,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Signup;
