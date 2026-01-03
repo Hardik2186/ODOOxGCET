@@ -11,8 +11,11 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Lock
+  Lock,
+  PieChart,
+  Banknote
 } from 'lucide-react';
+import EmployeeSidebar from '../../components/employee/Sidebar';
 import { payrollAPI } from '../../lib/api';
 
 const EmployeeSalary = () => {
@@ -124,34 +127,24 @@ const EmployeeSalary = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/employee/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <ArrowLeft size={24} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Salary</h1>
-              <p className="text-sm text-gray-600">View your salary details and download slips</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <EmployeeSidebar userName={JSON.parse(localStorage.getItem('user') || '{}')?.name} />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="lg:ml-64 p-4 lg:p-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900">My Salary 💰</h1>
+          <p className="text-gray-600 mt-2">View your salary details and download slips</p>
+        </div>
+
         {/* Read-Only Notice */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <Lock className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-          <div>
-            <p className="font-medium text-yellow-900">Read-Only Information</p>
-            <p className="text-sm text-yellow-700 mt-1">
-              Salary information is confidential and cannot be edited. Please contact HR for any queries or discrepancies.
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-8 flex items-start gap-4 border-l-4 border-l-yellow-400">
+          <Lock className="text-yellow-600 flex-shrink-0 mt-1" size={24} />
+          <div className="flex-1">
+            <p className="font-semibold text-yellow-900 text-lg">Read-Only Information</p>
+            <p className="text-sm text-yellow-700 mt-2">
+              Salary information is confidential and cannot be edited. For any queries or discrepancies, please contact HR department.
             </p>
           </div>
         </div>
@@ -164,44 +157,50 @@ const EmployeeSalary = () => {
               <h2 className="text-5xl font-bold">
                 ${calculateNetPay().toLocaleString()}
               </h2>
-              <p className="text-green-100 text-sm mt-2">Per Month</p>
+        {/* Net Salary Card - Prominent */}
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-2xl p-10 mb-8 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-lg font-semibold">NET MONTHLY SALARY</p>
+              <h2 className="text-5xl font-bold mt-3">${calculateNetPay().toLocaleString()}</h2>
+              <p className="text-green-100 text-sm mt-2">Take-home pay</p>
             </div>
-            <DollarSign size={64} className="text-green-200" />
+            <Banknote size={80} className="text-green-200 opacity-50" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Earnings Card */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-t-green-500">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-green-100 rounded-lg">
-                <TrendingUp className="text-green-600" size={24} />
+                <TrendingUp className="text-green-600" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Earnings</h3>
+              <h3 className="text-2xl font-bold text-gray-900">Earnings</h3>
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Base Salary</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Base Salary</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.baseSalary?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Bonus</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Bonus</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.bonus?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Allowances</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Allowances</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.allowances?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="font-semibold text-gray-900">Total Earnings</span>
-                <span className="font-bold text-green-600 text-lg">
+              <div className="flex justify-between items-center pt-4 bg-green-50 px-4 py-3 rounded-lg">
+                <span className="font-bold text-gray-900">Total Earnings</span>
+                <span className="font-bold text-green-600 text-xl">
                   ${(
                     (salaryData?.baseSalary || 0) +
                     (salaryData?.bonus || 0) +
@@ -213,36 +212,36 @@ const EmployeeSalary = () => {
           </div>
 
           {/* Deductions Card */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-t-red-500">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-red-100 rounded-lg">
-                <TrendingDown className="text-red-600" size={24} />
+                <TrendingDown className="text-red-600" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Deductions</h3>
+              <h3 className="text-2xl font-bold text-gray-900">Deductions</h3>
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Tax</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.tax?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Insurance</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Insurance</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.insurance?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b">
-                <span className="text-gray-600">Other Deductions</span>
-                <span className="font-semibold text-gray-900">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-600 font-medium">Other Deductions</span>
+                <span className="font-bold text-gray-900 text-lg">
                   ${salaryData?.otherDeductions?.toLocaleString() || '0'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="font-semibold text-gray-900">Total Deductions</span>
-                <span className="font-bold text-red-600 text-lg">
+              <div className="flex justify-between items-center pt-4 bg-red-50 px-4 py-3 rounded-lg">
+                <span className="font-bold text-gray-900">Total Deductions</span>
+                <span className="font-bold text-red-600 text-xl">
                   ${(
                     (salaryData?.tax || 0) +
                     (salaryData?.insurance || 0) +
@@ -255,12 +254,12 @@ const EmployeeSalary = () => {
         </div>
 
         {/* Salary Breakdown Summary */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Salary Structure</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Gross Salary</span>
-              <span className="font-semibold text-gray-900">
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border-l-4 border-l-purple-500">
+          <h3 className="text-2xl font-bold text-gray-900 mb-8">Salary Summary</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border-l-4 border-l-green-500">
+              <span className="font-semibold text-gray-700">Gross Salary</span>
+              <span className="font-bold text-green-600 text-xl">
                 ${(
                   (salaryData?.baseSalary || 0) +
                   (salaryData?.bonus || 0) +
@@ -268,9 +267,9 @@ const EmployeeSalary = () => {
                 ).toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Total Deductions</span>
-              <span className="font-semibold text-red-600">
+            <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg border-l-4 border-l-red-500">
+              <span className="font-semibold text-gray-700">Total Deductions</span>
+              <span className="font-bold text-red-600 text-xl">
                 - ${(
                   (salaryData?.tax || 0) +
                   (salaryData?.insurance || 0) +
@@ -278,9 +277,9 @@ const EmployeeSalary = () => {
                 ).toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
+            <div className="flex justify-between items-center p-6 bg-blue-50 rounded-lg border-l-4 border-l-blue-500 border-2 border-blue-200">
               <span className="font-bold text-gray-900 text-lg">Net Salary</span>
-              <span className="font-bold text-green-600 text-2xl">
+              <span className="font-bold text-blue-600 text-2xl">
                 ${calculateNetPay().toLocaleString()}
               </span>
             </div>
@@ -288,16 +287,20 @@ const EmployeeSalary = () => {
         </div>
 
         {/* Salary Slips Section */}
-        <div className="bg-white rounded-xl shadow-lg">
-          <div className="p-6 border-b">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900">Salary Slips</h3>
-              <div className="flex items-center gap-4">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="text-blue-600" size={28} />
+                Salary Slips
+              </h3>
+              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm">
                 <button
                   onClick={handlePreviousMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Previous month"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={20} className="text-gray-600" />
                 </button>
                 <div className="flex items-center gap-2">
                   <Calendar size={20} className="text-gray-600" />
