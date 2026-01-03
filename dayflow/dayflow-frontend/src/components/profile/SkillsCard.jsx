@@ -1,31 +1,53 @@
-import React from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 
-const SkillsCard = () => {
-  const skills = [
-    { id: 1, name: 'Energetic Woodcock', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
-    { id: 2, name: 'Luminous Raven', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' },
-    { id: 3, name: 'Actual Rook', color: 'bg-green-500/10 text-green-400 border-green-500/30' },
-  ];
+const SkillsCard = ({ skills, setSkills }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [showInput, setShowInput] = useState(false);
+
+  const handleAddSkill = () => {
+    if (inputValue.trim() && !skills.includes(inputValue.trim())) {
+      setSkills([...skills, inputValue.trim()]);
+      setInputValue('');
+      setShowInput(false);
+    }
+  };
+
+  const removeSkill = (index) => {
+    setSkills(skills.filter((_, i) => i !== index));
+  };
 
   return (
-    <div className="bg-[#121212] border border-white/10 rounded-xl p-6 shadow-lg">
+    <div className="bg-[#121212] border border-white/10 rounded-xl p-6">
       <h3 className="text-lg font-medium text-white mb-6 border-b border-white/10 pb-2">Skills</h3>
-      <div className="flex flex-wrap gap-3 mb-8">
-        {skills.map((skill) => (
-          <div key={skill.id} className={`px-4 py-1.5 rounded-lg border text-xs font-semibold ${skill.color}`}>
-            {skill.name}
-          </div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {skills.map((skill, idx) => (
+          <span key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-medium group">
+            {skill}
+            <X size={12} className="cursor-pointer hover:text-white opacity-60 group-hover:opacity-100" onClick={() => removeSkill(idx)} />
+          </span>
         ))}
       </div>
-      <button className="flex items-center gap-3 text-sm text-gray-500 hover:text-white transition-colors">
-        <div className="p-1 border border-dashed border-gray-600 rounded">
-          <Plus size={14} />
+
+      {showInput ? (
+        <div className="flex gap-2">
+          <input 
+            autoFocus
+            className="bg-black/40 border border-white/10 rounded px-3 py-1 text-xs outline-none focus:border-blue-500 transition-colors"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+          />
+          <button onClick={handleAddSkill} className="text-blue-500 text-xs font-bold uppercase">Add</button>
         </div>
-        <span>Add Skills</span>
-      </button>
+      ) : (
+        <button onClick={() => setShowInput(true)} className="flex items-center gap-2 text-xs text-gray-500 hover:text-white transition-colors group">
+          <div className="p-1 border border-dashed border-gray-600 rounded group-hover:border-white"><Plus size={12}/></div>
+          Add Skills
+        </button>
+      )}
     </div>
   );
 };
 
-export default SkillsCard; // Crucial for fixing the error
+export default SkillsCard;
