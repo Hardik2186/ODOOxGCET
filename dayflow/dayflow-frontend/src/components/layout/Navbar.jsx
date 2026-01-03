@@ -35,13 +35,29 @@ const Navbar = ({ profileImage, isCheckedIn, onToggleAttendance, onViewChange, c
           {/* RESTORED NAVIGATION LINKS */}
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <button 
+              onClick={() => onViewChange('profile')}
+              className={`pb-1 transition-all ${currentView === 'profile' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}
+            >
+              Profile
+            </button>
+            <button 
               onClick={() => onViewChange('employees')}
               className={`pb-1 transition-all ${currentView === 'employees' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}
             >
               Employees
             </button>
-            <button className="text-gray-400 hover:text-white transition-colors">Attendance</button>
-            <button className="text-gray-400 hover:text-white transition-colors">Time Off</button>
+            <button 
+              onClick={() => onViewChange('attendance')}
+              className={`pb-1 transition-all ${currentView === 'attendance' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}
+            >
+              Attendance
+            </button>
+            <button 
+              onClick={() => onViewChange('timeoff')}
+              className={`pb-1 transition-all ${currentView === 'timeoff' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}
+            >
+              Time Off
+            </button>
           </div>
         </div>
 
