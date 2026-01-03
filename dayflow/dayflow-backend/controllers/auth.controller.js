@@ -1,5 +1,6 @@
 // Handles registration, login, email verification
 const User = require('../models/User');
+const Employee = require('../models/Employee');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { secret, expiresIn } = require('../config/jwt');
@@ -12,6 +13,8 @@ exports.register = async (req, res) => {
     if (existing) return res.status(400).json({ message: 'Email already registered' });
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ employeeId, email, password: hash, role });
+    // Create Employee profile for the user
+    await Employee.create({ user: user._id, personalDetails: {}, jobDetails: {}, documents: [] });
     // TODO: Send verification email
     res.status(201).json({ message: 'Registered. Please verify your email.' });
   } catch (err) {
