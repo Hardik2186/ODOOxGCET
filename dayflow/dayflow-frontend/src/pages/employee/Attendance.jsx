@@ -10,7 +10,9 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Watch,
+  Smile
 } from 'lucide-react';
 import EmployeeSidebar from '../../components/employee/Sidebar';
 import { attendanceAPI } from '../../lib/api';
@@ -24,11 +26,19 @@ const EmployeeAttendance = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     fetchAttendanceData();
   }, [currentMonth, currentYear]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchAttendanceData = async () => {
     try {
@@ -63,6 +73,25 @@ const EmployeeAttendance = () => {
 
   const handleCheckOut = async () => {
     setCheckingIn(true);
+    const countdown = getCheckOutCountdown(todayStatus?.checkIn);
+    
+    // Show warning if checking out early
+    if (countdown?.remaining > 0) {
+      const confirmed = window.confirm(
+        `⚠️ WARNING - Early Check Out!\n\n` +
+        `You have only worked ${countdown.hours}h ${countdown.minutes}m\n\n` +
+        `Standard working hours: 8 hours\n` +
+        `Remaining time: ${countdown.hours}h ${countdown.minutes}m\n\n` +
+        `Are you sure you want to check out now?`
+      );
+      
+      if (!confirmed) {
+        setCheckingIn(false);
+        return; // User clicked Cancel
+      }
+    }
+    
+    // Proceed with check out
     try {
       await attendanceAPI.checkOut();
       fetchAttendanceData();
@@ -100,6 +129,30 @@ const EmployeeAttendance = () => {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  const getCheckOutCountdown = (checkIn) => {
+    if (!checkIn) return null;
+    const checkInTime = new Date(checkIn);
+    const eightHours = 8 * 60 * 60 * 1000;
+    const expectedCheckOut = new Date(checkInTime.getTime() + eightHours);
+    const now = currentTime;
+    
+    if (now >= expectedCheckOut) {
+      return { message: 'You can check out now!', status: 'ready', remaining: 0 };
+    }
+    
+    const remaining = expectedCheckOut - now;
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return { 
+      message: `Check out in ${hours}h ${minutes}m`, 
+      status: 'waiting',
+      remaining,
+      hours,
+      minutes
+    };
   };
 
   const handlePreviousMonth = () => {
@@ -152,7 +205,7 @@ const EmployeeAttendance = () => {
             <div>
               <p className="text-blue-100 text-sm font-semibold uppercase mb-2">Today's Date</p>
               <p className="text-4xl font-bold mb-4">
-                {new Date().toLocaleDateString('en-US', { 
+                {currentTime.toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
@@ -160,15 +213,19 @@ const EmployeeAttendance = () => {
                 })}
               </p>
               <p className="text-xl text-blue-100">
-                Current Time: <span className="font-bold text-3xl">{new Date().toLocaleTimeString()}</span>
+                Current Time: <span className="font-bold text-3xl">{currentTime.toLocaleTimeString()}</span>
               </p>
             </div>
 
             {/* Right Side - Check In/Out Info */}
             <div className="flex flex-col justify-center">
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white/20 backdrop-blur rounded-lg p-4">
-                  <p className="text-blue-100 text-sm mb-1">Check In</p>
+                {/* Check In Card */}
+                <div className="bg-white/20 backdrop-blur rounded-lg p-4 border border-white/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LogIn size={18} className="text-green-300" />
+                    <p className="text-blue-100 text-sm font-semibold">Check In</p>
+                  </div>
                   <p className="text-3xl font-bold">
                     {todayStatus?.checkIn 
                       ? new Date(todayStatus.checkIn).toLocaleTimeString('en-US', { 
@@ -177,9 +234,21 @@ const EmployeeAttendance = () => {
                         })
                       : '---'}
                   </p>
+                  {todayStatus?.checkIn && (
+                    <p className="text-xs text-green-200 mt-2">✓ Checked in</p>
+                  )}
                 </div>
-                <div className="bg-white/20 backdrop-blur rounded-lg p-4">
-                  <p className="text-blue-100 text-sm mb-1">Check Out</p>
+
+                {/* Check Out Card - Enhanced */}
+                <div className={`rounded-lg p-4 border transition-all ${
+                  todayStatus?.checkOut 
+                    ? 'bg-white/30 border-green-300' 
+                    : 'bg-orange-500/20 border-orange-300 animate-pulse'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <LogOutIcon size={18} className={todayStatus?.checkOut ? 'text-green-300' : 'text-orange-300'} />
+                    <p className="text-blue-100 text-sm font-semibold">Check Out</p>
+                  </div>
                   <p className="text-3xl font-bold">
                     {todayStatus?.checkOut 
                       ? new Date(todayStatus.checkOut).toLocaleTimeString('en-US', { 
@@ -188,33 +257,53 @@ const EmployeeAttendance = () => {
                         })
                       : '---'}
                   </p>
+                  {todayStatus?.checkOut ? (
+                    <p className="text-xs text-green-200 mt-2">✓ Checked out</p>
+                  ) : todayStatus?.checkIn && (
+                    <p className="text-xs text-orange-200 mt-2">
+                      {getCheckOutCountdown(todayStatus?.checkIn)?.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Check-In/Out Buttons */}
-              <div className="flex gap-4">
+              {/* Enhanced Check-In/Out Buttons */}
+              <div className="flex gap-3">
                 {!todayStatus?.checkIn ? (
                   <button
                     onClick={handleCheckIn}
                     disabled={checkingIn}
-                    className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
                   >
                     <LogIn size={24} />
-                    {checkingIn ? 'Checking In...' : 'Check In'}
+                    <span>{checkingIn ? 'Checking In...' : 'Check In Now'}</span>
                   </button>
                 ) : !todayStatus?.checkOut ? (
-                  <button
-                    onClick={handleCheckOut}
-                    disabled={checkingIn}
-                    className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95"
-                  >
-                    <LogOutIcon size={24} />
-                    {checkingIn ? 'Checking Out...' : 'Check Out'}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleCheckOut}
+                      disabled={checkingIn}
+                      className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                      <LogOutIcon size={24} />
+                      <span>{checkingIn ? 'Checking Out...' : 'Check Out Now'}</span>
+                    </button>
+                    {getCheckOutCountdown(todayStatus?.checkIn)?.status === 'waiting' && (
+                      <div className="flex items-center justify-center px-4 py-2 bg-yellow-400/20 rounded-xl border border-yellow-300 animate-pulse">
+                        <Watch size={20} className="text-yellow-300 mr-2" />
+                        <span className="text-sm font-semibold text-yellow-100">
+                          {getCheckOutCountdown(todayStatus?.checkIn)?.hours}h {getCheckOutCountdown(todayStatus?.checkIn)?.minutes}m left
+                        </span>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-green-500 text-white rounded-xl font-bold text-lg">
+                  <div className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg">
                     <CheckCircle size={24} />
-                    Completed for Today
+                    <div className="text-center">
+                      <p>Day Completed!</p>
+                      <p className="text-sm text-green-100">Great work today 👏</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -224,15 +313,24 @@ const EmployeeAttendance = () => {
           {/* Working Hours Display */}
           <div className="mt-8 pt-8 border-t border-blue-500 grid grid-cols-3 gap-4">
             <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Clock size={24} className="text-blue-200" />
+              </div>
               <p className="text-blue-100 text-sm mb-1">Working Hours</p>
               <p className="text-4xl font-bold">{todayStatus?.workingHours || '0:00'}</p>
               <p className="text-blue-200 text-xs mt-2">hrs</p>
             </div>
             <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <CheckCircle size={24} className="text-blue-200" />
+              </div>
               <p className="text-blue-100 text-sm mb-1">Status</p>
               <p className="text-2xl font-bold mt-2">{todayStatus?.status || 'Not Started'}</p>
             </div>
             <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Smile size={24} className="text-blue-200" />
+              </div>
               <p className="text-blue-100 text-sm mb-1">Break Time</p>
               <p className="text-4xl font-bold">0:00</p>
               <p className="text-blue-200 text-xs mt-2">hrs</p>

@@ -149,14 +149,6 @@ const EmployeeSalary = () => {
           </div>
         </div>
 
-        {/* Net Salary Card */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-8 text-white mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-green-100 text-sm mb-2">Current Net Salary</p>
-              <h2 className="text-5xl font-bold">
-                ${calculateNetPay().toLocaleString()}
-              </h2>
         {/* Net Salary Card - Prominent */}
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-2xl p-10 mb-8 text-white">
           <div className="flex items-center justify-between">
