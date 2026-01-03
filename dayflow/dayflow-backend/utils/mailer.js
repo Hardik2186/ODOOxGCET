@@ -15,8 +15,8 @@ module.exports = {
     });
     // For now, just log
     console.log('Sending email to', to, subject);
-    // Uncomment to actually send
-    // await transporter.sendMail({ from: mailConfig.user, to, subject, text, html });
+    // Actually send the email
+    await transporter.sendMail({ from: mailConfig.user, to, subject, text, html });
     return true;
   },
 };
