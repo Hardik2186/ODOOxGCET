@@ -9,8 +9,11 @@ import {
   XCircle,
   Clock,
   Upload,
-  FileText
+  FileText,
+  AlertCircle,
+  TrendingDown
 } from 'lucide-react';
+import EmployeeSidebar from '../../components/employee/Sidebar';
 import { leaveAPI } from '../../lib/api';
 
 const EmployeeLeave = () => {
@@ -133,78 +136,67 @@ const EmployeeLeave = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/employee/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <ArrowLeft size={24} />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Leaves</h1>
-                <p className="text-sm text-gray-600">Apply and manage your time off</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-            >
-              <Plus size={20} />
-              Apply Leave
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <EmployeeSidebar userName={JSON.parse(localStorage.getItem('user') || '{}')?.name} />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="lg:ml-64 p-4 lg:p-8">
+        {/* Page Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">My Leaves</h1>
+            <p className="text-gray-600 mt-2">Apply and manage your time off</p>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+          >
+            <Plus size={20} />
+            Apply Leave
+          </button>
+        </div>
+
         {/* Leave Balance Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-8 text-white hover:shadow-2xl transition-shadow">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Paid Time Off</h3>
-              <Calendar size={32} className="text-blue-200" />
+              <Calendar size={32} className="text-blue-200 opacity-80" />
             </div>
-            <p className="text-4xl font-bold mb-2">{leaveBalance?.paidLeave || 24}</p>
-            <p className="text-blue-100">Days Available</p>
+            <p className="text-5xl font-bold mb-2">{leaveBalance?.paidLeave || 24}</p>
+            <p className="text-blue-100 text-sm">Days Available</p>
           </div>
 
-          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-lg p-8 text-white hover:shadow-2xl transition-shadow">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Sick Leave</h3>
-              <Calendar size={32} className="text-red-200" />
+              <AlertCircle size={32} className="text-red-200 opacity-80" />
             </div>
-            <p className="text-4xl font-bold mb-2">{leaveBalance?.sickLeave || 7}</p>
-            <p className="text-red-100">Days Available</p>
+            <p className="text-5xl font-bold mb-2">{leaveBalance?.sickLeave || 7}</p>
+            <p className="text-red-100 text-sm">Days Available</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-8 text-white hover:shadow-2xl transition-shadow">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Total Used</h3>
-              <Calendar size={32} className="text-purple-200" />
+              <TrendingDown size={32} className="text-purple-200 opacity-80" />
             </div>
-            <p className="text-4xl font-bold mb-2">{leaveBalance?.usedLeave || 0}</p>
-            <p className="text-purple-100">Days This Year</p>
+            <p className="text-5xl font-bold mb-2">{leaveBalance?.usedLeave || 0}</p>
+            <p className="text-purple-100 text-sm">Days This Year</p>
           </div>
         </div>
 
         {/* Leave Types Info */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Time Off Types</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border-l-4 border-purple-500">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Leave Types</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {leaveTypes.map((type) => (
-              <div key={type.value} className="border rounded-lg p-4">
-                <div className={`w-3 h-3 rounded-full bg-${type.color}-500 mb-2`} />
-                <h3 className="font-semibold text-gray-900">{type.label}</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {type.value === 'Paid' && 'Full salary during leave'}
-                  {type.value === 'Sick' && 'Medical certificate may be required'}
-                  {type.value === 'Unpaid' && 'No salary during leave period'}
+              <div key={type.value} className={`p-4 rounded-lg border-l-4 bg-${type.color}-50 border-${type.color}-500`}>
+                <h4 className="font-semibold text-gray-900 mb-2">{type.label}</h4>
+                <p className="text-sm text-gray-600">
+                  {type.value === 'Paid' && 'Standard paid time off for holidays and vacation'}
+                  {type.value === 'Sick' && 'For illness and medical appointments'}
+                  {type.value === 'Unpaid' && 'Unpaid leave as per company policy'}
                 </p>
               </div>
             ))}
@@ -212,28 +204,29 @@ const EmployeeLeave = () => {
         </div>
 
         {/* Leave History */}
-        <div className="bg-white rounded-xl shadow-lg">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900">Leave History</h2>
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+            <h2 className="text-2xl font-bold text-gray-900">Leave History</h2>
+            <p className="text-gray-600 mt-2">View all your leave applications and their status</p>
           </div>
 
           <div className="divide-y divide-gray-200">
             {leaves.length > 0 ? (
               leaves.map((leave, index) => (
-                <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={index} className="p-8 hover:bg-gray-50 transition-all border-l-4 border-transparent hover:border-purple-500">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex items-center gap-4 mb-4">
+                        <h3 className="text-xl font-bold text-gray-900">
                           {leave.leaveType} Time Off
                         </h3>
                         {getStatusBadge(leave.status)}
                       </div>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4 bg-gray-50 rounded-lg p-4">
                         <div>
-                          <p className="text-sm text-gray-600">From</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-xs text-gray-500 font-semibold uppercase">From</p>
+                          <p className="font-bold text-gray-900 mt-1">
                             {new Date(leave.startDate).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
@@ -242,8 +235,8 @@ const EmployeeLeave = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">To</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-xs text-gray-500 font-semibold uppercase">To</p>
+                          <p className="font-bold text-gray-900 mt-1">
                             {new Date(leave.endDate).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
@@ -252,14 +245,14 @@ const EmployeeLeave = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Duration</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-xs text-gray-500 font-semibold uppercase">Duration</p>
+                          <p className="font-bold text-gray-900 mt-1">
                             {calculateLeaveDays(leave.startDate, leave.endDate)} days
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Applied On</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-xs text-gray-500 font-semibold uppercase">Applied On</p>
+                          <p className="font-bold text-gray-900 mt-1">
                             {new Date(leave.createdAt).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric'
@@ -268,9 +261,9 @@ const EmployeeLeave = () => {
                         </div>
                       </div>
 
-                      <div className="mt-3">
-                        <p className="text-sm text-gray-600">Reason:</p>
-                        <p className="text-gray-900">{leave.reason}</p>
+                      <div className="mt-4">
+                        <p className="text-sm font-semibold text-gray-700">📝 Reason:</p>
+                        <p className="text-gray-900 mt-1 bg-blue-50 p-3 rounded-lg">{leave.reason}</p>
                       </div>
 
                       {leave.attachment && (

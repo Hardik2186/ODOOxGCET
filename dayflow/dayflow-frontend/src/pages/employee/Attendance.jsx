@@ -3,15 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Clock, 
   Calendar, 
-  ArrowLeft,
   LogIn,
   LogOut as LogOutIcon,
   CheckCircle,
   XCircle,
   AlertCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Zap,
+  Watch,
+  Smile
 } from 'lucide-react';
+import EmployeeSidebar from '../../components/employee/Sidebar';
 import { attendanceAPI } from '../../lib/api';
 
 const EmployeeAttendance = () => {
@@ -23,10 +26,19 @@ const EmployeeAttendance = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     fetchAttendanceData();
   }, [currentMonth, currentYear]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchAttendanceData = async () => {
     try {
@@ -50,7 +62,7 @@ const EmployeeAttendance = () => {
     try {
       await attendanceAPI.checkIn();
       fetchAttendanceData();
-      alert('Checked in successfully!');
+      alert('✅ Checked in successfully!');
     } catch (error) {
       console.error('Error checking in:', error);
       alert(error.response?.data?.message || 'Failed to check in');
@@ -61,10 +73,29 @@ const EmployeeAttendance = () => {
 
   const handleCheckOut = async () => {
     setCheckingIn(true);
+    const countdown = getCheckOutCountdown(todayStatus?.checkIn);
+    
+    // Show warning if checking out early
+    if (countdown?.remaining > 0) {
+      const confirmed = window.confirm(
+        `⚠️ WARNING - Early Check Out!\n\n` +
+        `You have only worked ${countdown.hours}h ${countdown.minutes}m\n\n` +
+        `Standard working hours: 8 hours\n` +
+        `Remaining time: ${countdown.hours}h ${countdown.minutes}m\n\n` +
+        `Are you sure you want to check out now?`
+      );
+      
+      if (!confirmed) {
+        setCheckingIn(false);
+        return; // User clicked Cancel
+      }
+    }
+    
+    // Proceed with check out
     try {
       await attendanceAPI.checkOut();
       fetchAttendanceData();
-      alert('Checked out successfully!');
+      alert('✅ Checked out successfully!');
     } catch (error) {
       console.error('Error checking out:', error);
       alert(error.response?.data?.message || 'Failed to check out');
@@ -100,6 +131,30 @@ const EmployeeAttendance = () => {
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
   };
 
+  const getCheckOutCountdown = (checkIn) => {
+    if (!checkIn) return null;
+    const checkInTime = new Date(checkIn);
+    const eightHours = 8 * 60 * 60 * 1000;
+    const expectedCheckOut = new Date(checkInTime.getTime() + eightHours);
+    const now = currentTime;
+    
+    if (now >= expectedCheckOut) {
+      return { message: 'You can check out now!', status: 'ready', remaining: 0 };
+    }
+    
+    const remaining = expectedCheckOut - now;
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return { 
+      message: `Check out in ${hours}h ${minutes}m`, 
+      status: 'waiting',
+      remaining,
+      hours,
+      minutes
+    };
+  };
+
   const handlePreviousMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -132,223 +187,264 @@ const EmployeeAttendance = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/employee/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <ArrowLeft size={24} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Attendance</h1>
-              <p className="text-sm text-gray-600">Track your attendance and working hours</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <EmployeeSidebar userName={user?.name} />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Today's Attendance Card */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white mb-8">
-          <div className="flex items-center justify-between mb-6">
+      <main className="lg:ml-64 p-4 lg:p-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">My Attendance</h1>
+          <p className="text-gray-600 mt-2">Track your attendance and working hours</p>
+        </div>
+
+        {/* Today's Check-In/Check-Out Card */}
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-xl p-8 text-white mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Side - Time Display */}
             <div>
-              <h2 className="text-2xl font-bold mb-2">Today's Attendance</h2>
-              <p className="text-blue-100">
-                {new Date().toLocaleDateString('en-US', { 
+              <p className="text-blue-100 text-sm font-semibold uppercase mb-2">Today's Date</p>
+              <p className="text-4xl font-bold mb-4">
+                {currentTime.toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric' 
                 })}
               </p>
+              <p className="text-xl text-blue-100">
+                Current Time: <span className="font-bold text-3xl">{currentTime.toLocaleTimeString()}</span>
+              </p>
             </div>
-            <Clock size={48} className="text-blue-200" />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white/20 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Check In</p>
-              <p className="text-2xl font-bold">
-                {todayStatus?.checkIn 
-                  ? new Date(todayStatus.checkIn).toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })
-                  : '--:--'}
-              </p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Check Out</p>
-              <p className="text-2xl font-bold">
-                {todayStatus?.checkOut 
-                  ? new Date(todayStatus.checkOut).toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })
-                  : '--:--'}
-              </p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Working Hours</p>
-              <p className="text-2xl font-bold">
-                {todayStatus?.workingHours || '0:00'} hrs
-              </p>
-            </div>
-          </div>
+            {/* Right Side - Check In/Out Info */}
+            <div className="flex flex-col justify-center">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {/* Check In Card */}
+                <div className="bg-white/20 backdrop-blur rounded-lg p-4 border border-white/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LogIn size={18} className="text-green-300" />
+                    <p className="text-blue-100 text-sm font-semibold">Check In</p>
+                  </div>
+                  <p className="text-3xl font-bold">
+                    {todayStatus?.checkIn 
+                      ? new Date(todayStatus.checkIn).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })
+                      : '---'}
+                  </p>
+                  {todayStatus?.checkIn && (
+                    <p className="text-xs text-green-200 mt-2">✓ Checked in</p>
+                  )}
+                </div>
 
-          <div className="flex gap-4">
-            {!todayStatus?.checkIn ? (
-              <button
-                onClick={handleCheckIn}
-                disabled={checkingIn}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors disabled:opacity-50"
-              >
-                <LogIn size={20} />
-                {checkingIn ? 'Checking In...' : 'Check In'}
-              </button>
-            ) : !todayStatus?.checkOut ? (
-              <button
-                onClick={handleCheckOut}
-                disabled={checkingIn}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors disabled:opacity-50"
-              >
-                <LogOutIcon size={20} />
-                {checkingIn ? 'Checking Out...' : 'Check Out'}
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold">
-                <CheckCircle size={20} />
-                Completed for Today
+                {/* Check Out Card - Enhanced */}
+                <div className={`rounded-lg p-4 border transition-all ${
+                  todayStatus?.checkOut 
+                    ? 'bg-white/30 border-green-300' 
+                    : 'bg-orange-500/20 border-orange-300 animate-pulse'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <LogOutIcon size={18} className={todayStatus?.checkOut ? 'text-green-300' : 'text-orange-300'} />
+                    <p className="text-blue-100 text-sm font-semibold">Check Out</p>
+                  </div>
+                  <p className="text-3xl font-bold">
+                    {todayStatus?.checkOut 
+                      ? new Date(todayStatus.checkOut).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })
+                      : '---'}
+                  </p>
+                  {todayStatus?.checkOut ? (
+                    <p className="text-xs text-green-200 mt-2">✓ Checked out</p>
+                  ) : todayStatus?.checkIn && (
+                    <p className="text-xs text-orange-200 mt-2">
+                      {getCheckOutCountdown(todayStatus?.checkIn)?.message}
+                    </p>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* Enhanced Check-In/Out Buttons */}
+              <div className="flex gap-3">
+                {!todayStatus?.checkIn ? (
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={checkingIn}
+                    className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <LogIn size={24} />
+                    <span>{checkingIn ? 'Checking In...' : 'Check In Now'}</span>
+                  </button>
+                ) : !todayStatus?.checkOut ? (
+                  <>
+                    <button
+                      onClick={handleCheckOut}
+                      disabled={checkingIn}
+                      className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                      <LogOutIcon size={24} />
+                      <span>{checkingIn ? 'Checking Out...' : 'Check Out Now'}</span>
+                    </button>
+                    {getCheckOutCountdown(todayStatus?.checkIn)?.status === 'waiting' && (
+                      <div className="flex items-center justify-center px-4 py-2 bg-yellow-400/20 rounded-xl border border-yellow-300 animate-pulse">
+                        <Watch size={20} className="text-yellow-300 mr-2" />
+                        <span className="text-sm font-semibold text-yellow-100">
+                          {getCheckOutCountdown(todayStatus?.checkIn)?.hours}h {getCheckOutCountdown(todayStatus?.checkIn)?.minutes}m left
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg">
+                    <CheckCircle size={24} />
+                    <div className="text-center">
+                      <p>Day Completed!</p>
+                      <p className="text-sm text-green-100">Great work today 👏</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Working Hours Display */}
+          <div className="mt-8 pt-8 border-t border-blue-500 grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Clock size={24} className="text-blue-200" />
+              </div>
+              <p className="text-blue-100 text-sm mb-1">Working Hours</p>
+              <p className="text-4xl font-bold">{todayStatus?.workingHours || '0:00'}</p>
+              <p className="text-blue-200 text-xs mt-2">hrs</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <CheckCircle size={24} className="text-blue-200" />
+              </div>
+              <p className="text-blue-100 text-sm mb-1">Status</p>
+              <p className="text-2xl font-bold mt-2">{todayStatus?.status || 'Not Started'}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Smile size={24} className="text-blue-200" />
+              </div>
+              <p className="text-blue-100 text-sm mb-1">Break Time</p>
+              <p className="text-4xl font-bold">0:00</p>
+              <p className="text-blue-200 text-xs mt-2">hrs</p>
+            </div>
           </div>
         </div>
 
         {/* Monthly Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="text-green-600" size={24} />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Present Days</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-gray-600 text-sm font-semibold">PRESENT DAYS</p>
+                <p className="text-4xl font-bold text-gray-900 mt-2">
                   {monthSummary?.presentDays || 0}
                 </p>
               </div>
+              <CheckCircle className="text-green-500" size={40} />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <AlertCircle className="text-yellow-600" size={24} />
-              </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Half Days</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-gray-600 text-sm font-semibold">HALF DAYS</p>
+                <p className="text-4xl font-bold text-gray-900 mt-2">
                   {monthSummary?.halfDays || 0}
                 </p>
               </div>
+              <AlertCircle className="text-yellow-500" size={40} />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="text-red-600" size={24} />
-              </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Absent</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-gray-600 text-sm font-semibold">ABSENT</p>
+                <p className="text-4xl font-bold text-gray-900 mt-2">
                   {monthSummary?.absentDays || 0}
                 </p>
               </div>
+              <XCircle className="text-red-500" size={40} />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Calendar className="text-blue-600" size={24} />
-              </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Working</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-gray-600 text-sm font-semibold">TOTAL WORKING</p>
+                <p className="text-4xl font-bold text-gray-900 mt-2">
                   {monthSummary?.totalWorkingDays || 0}
                 </p>
               </div>
+              <Calendar className="text-blue-500" size={40} />
             </div>
           </div>
         </div>
 
-        {/* Attendance Records */}
-        <div className="bg-white rounded-xl shadow-lg">
-          <div className="p-6 border-b">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Attendance History</h2>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handlePreviousMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <span className="font-semibold text-lg">
-                  {monthNames[currentMonth]} {currentYear}
-                </span>
-                <button
-                  onClick={handleNextMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
+        {/* Attendance Records Table */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Attendance History</h2>
+              <p className="text-gray-600 text-sm mt-1">Detailed attendance records</p>
+            </div>
+            <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-all"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <span className="font-semibold text-lg min-w-max">
+                {monthNames[currentMonth]} {currentYear}
+              </span>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-all"
+              >
+                <ChevronRight size={20} />
+              </button>
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check In
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check Out
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Working Hours
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Extra Hours
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Check In</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Check Out</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Working Hours</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Extra Hours</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {attendanceRecords.length > 0 ? (
                   attendanceRecords.map((record, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                    <tr key={index} className="border-b hover:bg-gray-50 transition-all">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-semibold text-gray-900">
                           {new Date(record.date).toLocaleDateString('en-US', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
                           })}
                         </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
                           {record.checkIn 
                             ? new Date(record.checkIn).toLocaleTimeString('en-US', {
                                 hour: '2-digit',
@@ -357,8 +453,8 @@ const EmployeeAttendance = () => {
                             : '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
                           {record.checkOut 
                             ? new Date(record.checkOut).toLocaleTimeString('en-US', {
                                 hour: '2-digit',
@@ -367,25 +463,27 @@ const EmployeeAttendance = () => {
                             : '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-blue-600">
                           {calculateWorkingHours(record.checkIn, record.checkOut)} hrs
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-600">
                           {record.extraHours || '0:00'} hrs
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4">
                         {getStatusBadge(record.status)}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                      No attendance records found for this month
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg">No attendance records found</p>
+                      <p className="text-sm mt-2">Records will appear here as you check in</p>
                     </td>
                   </tr>
                 )}
