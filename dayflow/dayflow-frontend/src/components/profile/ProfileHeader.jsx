@@ -1,9 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Pencil, Camera } from 'lucide-react';
 
-const ProfileHeader = () => {
-  // 1. State to hold the image URL
-  const [image, setImage] = useState(null);
+const ProfileHeader = ({ image, setImage }) => {
   // 2. Reference to the hidden file input
   const fileInputRef = useRef(null);
 

@@ -20,6 +20,9 @@ const AdminDashboard = () => {
     interests: "Open source and hiking."
   });
 
+  const [skills, setSkills] = useState(['React', 'Node.js', 'MongoDB', 'AWS']);
+  const [certs, setCerts] = useState(['AWS Solutions Architect', 'Certified Kubernetes Administrator']);
+
   const [profileImage, setProfileImage] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState(null);
@@ -55,7 +58,7 @@ const AdminDashboard = () => {
 
             <div className="transition-all duration-300">
               {/* Correctly passing 'data' prop here */}
-              {activeTab === 'Resume' && <ResumeView data={resumeData} setData={setResumeData} />}
+              {activeTab === 'Resume' && <ResumeView data={resumeData} setData={setResumeData} skills={skills} setSkills={setSkills} certs={certs} setCerts={setCerts} />}
               {activeTab === 'Private Info' && <PrivateInfoView />}
               {activeTab === 'Salary Info' && <SalaryInfoView />}
             </div>
