@@ -1,4 +1,4 @@
-// Date utility functions
+// Salary calculation utilities
 module.exports = {
   // ...to be implemented
 };

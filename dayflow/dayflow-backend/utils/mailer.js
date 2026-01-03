@@ -1,4 +1,4 @@
-// Date utility functions
+// Email sending utility (stub)
 module.exports = {
   // ...to be implemented
 };

@@ -1,4 +1,4 @@
-// Date utility functions
+// Handles leave requests, approvals
 module.exports = {
   // ...to be implemented
 };
