@@ -1,4 +1,8 @@
 // Connects to AI microservice (stub)
 module.exports = {
-  // ...to be implemented
+  // Analyze document (stub)
+  analyzeDocument: (doc) => {
+    // TODO: Connect to AI microservice
+    return { summary: 'AI analysis result (stub)' };
+  },
 };

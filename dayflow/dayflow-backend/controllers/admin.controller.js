@@ -1,4 +1,7 @@
 // Handles admin-specific actions
-module.exports = {
-  // ...to be implemented
+
+// Admin dashboard summary (stub)
+exports.dashboard = async (req, res) => {
+  // TODO: Aggregate employee, attendance, leave, payroll data
+  res.json({ message: 'Admin dashboard summary (stub)' });
 };
