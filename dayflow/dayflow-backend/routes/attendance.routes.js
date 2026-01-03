@@ -8,6 +8,7 @@ const role = require('../middleware/role.middleware');
 router.post('/check-in', auth, role(['employee', 'admin', 'hr']), attendanceController.checkIn);
 router.post('/check-out', auth, role(['employee', 'admin', 'hr']), attendanceController.checkOut);
 router.get('/me', auth, role(['employee', 'admin', 'hr']), attendanceController.viewOwnAttendance);
+router.get('/today', auth, role(['employee', 'admin', 'hr']), attendanceController.getTodayStatus);
 
 // Admin: view all attendance
 router.get('/', auth, role(['admin', 'hr']), attendanceController.adminViewAllAttendance);

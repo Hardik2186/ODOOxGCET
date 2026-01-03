@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Award, Trash2, X, Calendar, ExternalLink } from 'lucide-react';
 
-const CertificationCard = ({ certs, setCerts }) => {
+const CertificationCard = ({ certs = [], setCerts = () => {} }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',

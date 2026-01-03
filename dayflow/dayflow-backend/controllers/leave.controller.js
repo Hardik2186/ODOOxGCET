@@ -53,3 +53,26 @@ exports.adminRejectLeave = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Employee: cancel a leave
+exports.cancelLeave = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const leave = await Leave.findOne({ _id: id, user: req.user.id });
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    await leave.remove();
+    res.json({ message: 'Leave cancelled' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Employee: simple leave balance (placeholder)
+exports.getLeaveBalance = async (req, res) => {
+  try {
+    // For demo: return a fixed balance. In prod compute based on company policy.
+    res.json({ available: 12, taken: 3 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

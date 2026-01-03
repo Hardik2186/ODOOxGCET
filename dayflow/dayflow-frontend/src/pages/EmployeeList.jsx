@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plane, Clock, DollarSign, UserPlus, X } from 'lucide-react';
+import { adminAPI } from '../lib/api';
 // Import the modal you created
 import AddEmployeeModal from '../components/profile/AddEmployeeModal';
 
@@ -9,12 +10,39 @@ const EmployeeList = () => {
   const [showModal, setShowModal] = useState(false);
   
   // Initial Mock Data
-  const [employees, setEmployees] = useState([
-    { id: 1, name: 'Alex Rivera', role: 'Sr. Product Designer', status: 'present', salary: '50,000', checkIn: '09:15 AM' },
-    { id: 2, name: 'Sarah Jenkins', role: 'Engineering Manager', status: 'leave', salary: '85,000', checkIn: '-' },
-    { id: 3, name: 'Ronak Shah', role: 'Full Stack Developer', status: 'absent', salary: '45,000', checkIn: '-' },
-    { id: 4, name: 'Jenil Patel', role: 'UI/UX Intern', status: 'present', salary: '15,000', checkIn: '10:02 AM' },
-  ]);
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [employeesError, setEmployeesError] = useState(null);
+
+  // Fetch employees from backend when component mounts
+  React.useEffect(() => {
+    fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchEmployees = async () => {
+    setLoadingEmployees(true);
+    setEmployeesError(null);
+    try {
+      const res = await adminAPI.getEmployees();
+      const data = res.data || [];
+      // Map backend Employee documents to the UI shape
+      const mapped = data.map(e => ({
+        id: e._id,
+        name: e.personalDetails?.name || e.user?.email || 'Employee',
+        role: e.user?.role || e.jobDetails?.designation || 'employee',
+        salary: e.jobDetails?.salary ? String(e.jobDetails.salary) : '0',
+        checkIn: '-',
+        status: 'present'
+      }));
+      setEmployees(mapped);
+    } catch (err) {
+      console.error('Error fetching employees', err);
+      setEmployeesError(err.message || 'Failed to fetch employees');
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
 
   // 2. Logic: Filter employees based on search input
   const filteredEmployees = employees.filter(emp => 
@@ -26,15 +54,33 @@ const EmployeeList = () => {
   const handleAddEmployee = (newEmpData) => {
     const newEntry = {
       ...newEmpData,
-      id: Date.now(), // Unique ID for React keys
-      status: 'present', // Default status for new hires
-      checkIn: '-'      // Default check-in
+      id: newEmpData.id || Date.now(), // Use server id when available
+      status: newEmpData.status || 'present', // Default status for new hires
+      checkIn: newEmpData.checkIn || '-'      // Default check-in
     };
     setEmployees(prev => [newEntry, ...prev]);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
+      {/* Show a loading / error state if employees not loaded */}
+      {loadingEmployees && (
+        <div className="py-6 text-center text-gray-500">Loading employees...</div>
+      )}
+
+      {employeesError && (
+        <div className="py-6 text-center text-red-400">
+          <p className="mb-3">Unable to load employees: {employeesError}</p>
+          <div className="flex items-center justify-center gap-3">
+            <button onClick={fetchEmployees} className="py-2 px-4 bg-purple-600 text-white rounded">Retry</button>
+            <button onClick={() => alert('Start backend: cd dayflow-backend && npm install && npm run dev')} className="py-2 px-4 border rounded">How to start backend</button>
+          </div>
+        </div>
+      )}
+
+      {!loadingEmployees && !employeesError && employees.length === 0 && (
+        <div className="py-6 text-center text-gray-500">No employees yet. Create one using the New button.</div>
+      )}
       
       {/* --- Action Bar (Search & New Button) --- */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#121212] p-4 rounded-xl border border-white/5 shadow-lg">

@@ -2,12 +2,24 @@ const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorMiddleware = require('./middleware/error.middleware');
+const cors = require('cors');
 
 dotenv.config();
 connectDB();
 
+
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
-const SkillsCard = ({ skills, setSkills }) => {
+const SkillsCard = ({ skills = [], setSkills = () => {} }) => {
   const [inputValue, setInputValue] = useState('');
   const [showInput, setShowInput] = useState(false);
 

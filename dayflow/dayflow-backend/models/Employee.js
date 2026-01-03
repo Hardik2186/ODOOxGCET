@@ -13,6 +13,7 @@ const EmployeeSchema = new mongoose.Schema({
     department: String,
     joiningDate: Date,
     salary: Number,
+    company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
   },
   documents: [String],
 });

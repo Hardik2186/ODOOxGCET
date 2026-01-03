@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, LogOut, ChevronDown, Moon, Sun } from 'lucide-react';
+import { authAPI } from '../../lib/api';
 
 const AvatarDropdown = ({ profileImage, onViewChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,20 @@ const AvatarDropdown = ({ profileImage, onViewChange }) => {
               </button>
             </div>
 
-            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+            <button onClick={async () => {
+                setIsOpen(false);
+                try {
+                  await authAPI.logout();
+                } catch (err) {
+                  // ignore network errors; proceed to client-side logout
+                  console.warn('Logout API call failed', err);
+                }
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
               <LogOut size={14} /> Logout
             </button>
           </div>

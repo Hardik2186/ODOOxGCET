@@ -39,42 +39,51 @@ api.interceptors.response.use(
 // Auth APIs
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
+  register: (userData) => {
+    // If sending FormData (file upload), ensure the instance-level "Content-Type" header is not forced
+    if (userData instanceof FormData) {
+      return api.post('/auth/register', userData, { headers: { 'Content-Type': undefined } });
+    }
+    return api.post('/auth/register', userData);
+  },
   logout: () => api.post('/auth/logout'),
+};
+
+// Admin APIs
+export const adminAPI = {
+  createEmployee: (data) => api.post('/admin/employees', data),
+  getEmployees: () => api.get('/employee'),
+  dashboard: () => api.get('/admin/dashboard'),
 };
 
 // Employee Profile APIs
 export const employeeAPI = {
-  getProfile: () => api.get('/employee/profile'),
-  updateProfile: (data) => api.put('/employee/profile', data),
-  uploadProfilePhoto: (formData) => api.post('/employee/profile/photo', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  uploadDocument: (formData) => api.post('/employee/documents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
+  getProfile: () => api.get('/employee/me'),
+  updateProfile: (data) => api.put('/employee/me', data),
+  uploadProfilePhoto: (formData) => api.post('/employee/me/photo', formData, { headers: { 'Content-Type': undefined } }),
+  uploadDocument: (formData) => api.post('/employee/documents', formData, { headers: { 'Content-Type': undefined } }),
 };
 
 // Attendance APIs
 export const attendanceAPI = {
-  checkIn: () => api.post('/attendance/checkin'),
-  checkOut: () => api.post('/attendance/checkout'),
-  getMyAttendance: (month, year) => api.get('/attendance/my', { params: { month, year } }),
+  checkIn: () => api.post('/attendance/check-in'),
+  checkOut: () => api.post('/attendance/check-out'),
+  getMyAttendance: (month, year) => api.get('/attendance/me', { params: { month, year } }),
   getTodayStatus: () => api.get('/attendance/today'),
   getMonthSummary: (month, year) => api.get('/attendance/summary', { params: { month, year } }),
 };
 
 // Leave APIs
 export const leaveAPI = {
-  applyLeave: (leaveData) => api.post('/leave/apply', leaveData),
-  getMyLeaves: () => api.get('/leave/my'),
+  applyLeave: (leaveData) => api.post('/leave', leaveData),
+  getMyLeaves: () => api.get('/leave/me'),
   cancelLeave: (leaveId) => api.delete(`/leave/${leaveId}`),
   getLeaveBalance: () => api.get('/leave/balance'),
 };
 
 // Payroll/Salary APIs
 export const payrollAPI = {
-  getMySalary: () => api.get('/payroll/my'),
+  getMySalary: () => api.get('/payroll/me'),
   getSalarySlip: (month, year) => api.get('/payroll/slip', { params: { month, year } }),
   downloadSalarySlip: (month, year) => api.get('/payroll/slip/download', {
     params: { month, year },

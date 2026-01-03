@@ -42,6 +42,26 @@ exports.viewOwnAttendance = async (req, res) => {
   }
 };
 
+// Employee: get today's attendance status
+exports.getTodayStatus = async (req, res) => {
+  try {
+    const today = new Date().setHours(0,0,0,0);
+    const record = await Attendance.findOne({ user: req.user.id, date: today });
+    if (!record) return res.json({ status: 'Not Checked In' });
+    // compute working hours if checkOut exists
+    let workingHours = '0:00';
+    if (record.checkIn && record.checkOut) {
+      const diff = new Date(record.checkOut) - new Date(record.checkIn);
+      const hrs = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      workingHours = `${hrs}:${String(mins).padStart(2, '0')}`;
+    }
+    res.json({ status: record.status || 'Present', workingHours });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Admin: view all attendance
 exports.adminViewAllAttendance = async (req, res) => {
   try {

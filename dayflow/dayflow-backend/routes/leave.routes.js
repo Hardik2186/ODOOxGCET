@@ -7,6 +7,8 @@ const role = require('../middleware/role.middleware');
 // Employee: apply for leave, view own leaves
 router.post('/', auth, role(['employee', 'admin', 'hr']), leaveController.applyLeave);
 router.get('/me', auth, role(['employee', 'admin', 'hr']), leaveController.viewOwnLeaves);
+router.delete('/:id', auth, role(['employee', 'admin', 'hr']), leaveController.cancelLeave);
+router.get('/balance', auth, role(['employee', 'admin', 'hr']), leaveController.getLeaveBalance);
 
 // Admin: view all, approve, reject
 router.get('/', auth, role(['admin', 'hr']), leaveController.adminViewAllLeaves);
