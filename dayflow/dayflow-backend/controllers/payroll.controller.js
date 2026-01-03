@@ -1,4 +1,4 @@
-// Date utility functions
+// Handles payroll view/update
 module.exports = {
   // ...to be implemented
 };
