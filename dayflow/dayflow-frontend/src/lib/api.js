@@ -1,17 +1,28 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Add token to requests if it exists
 api.interceptors.request.use(
   (config) => {
+    // Let Axios/browser set the multipart boundary automatically.
+    // If we force a JSON content-type globally, file uploads will break.
+    const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+    if (isFormData) {
+      if (config.headers && 'Content-Type' in config.headers) {
+        delete config.headers['Content-Type'];
+      }
+    } else if (config.data != null) {
+      config.headers = config.headers || {};
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+      }
+    }
+
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -40,10 +51,6 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => {
-    // If sending FormData (file upload), ensure the instance-level "Content-Type" header is not forced
-    if (userData instanceof FormData) {
-      return api.post('/auth/register', userData, { headers: { 'Content-Type': undefined } });
-    }
     return api.post('/auth/register', userData);
   },
   logout: () => api.post('/auth/logout'),
